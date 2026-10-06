@@ -8,8 +8,12 @@ Arabic-only (RTL) point-of-sale system. Single full-stack [Next.js](https://next
 pnpm install
 cp .env.example .env
 docker compose up -d     # local Postgres (cashier/cashier on :5434)
-pnpm dev                 # http://localhost:3000
+pnpm db:migrate
+pnpm db:seed             # org, location, roles, permissions, admin user
+pnpm dev                 # http://localhost:3000/login
 ```
+
+`.env.example` ships placeholder Supabase keys — replace them with a real project (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`) plus `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD`; login does not work without them. The seed provisions the admin auth user with those credentials (idempotent, safe to re-run). E2E needs Docker Postgres up, a migrated+seeded DB, and the same `.env`; CI's e2e job expects the values as repository secrets (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`).
 
 ## Commands
 

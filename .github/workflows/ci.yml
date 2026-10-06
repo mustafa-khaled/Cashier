@@ -40,6 +40,25 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cashier
+          POSTGRES_PASSWORD: cashier
+          POSTGRES_DB: cashier
+        ports: ["5434:5432"]
+        options: >-
+          --health-cmd "pg_isready -U cashier -d cashier"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+      E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -49,8 +68,27 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Verify auth secrets
+        run: |
+          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" ] || [ -z "$SUPABASE_SECRET_KEY" ] || [ -z "$E2E_ADMIN_EMAIL" ] || [ -z "$E2E_ADMIN_PASSWORD" ]; then
+            echo "::error::Missing Supabase/E2E secrets required for auth e2e (set them in repo settings)"
+            exit 1
+          fi
       - name: Prepare environment
-        run: cp .env.example .env
+        run: |
+          cp .env.example .env
+          sed -i '/^NEXT_PUBLIC_SUPABASE_URL=/d;/^NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=/d;/^SUPABASE_SECRET_KEY=/d;/^E2E_ADMIN_EMAIL=/d;/^E2E_ADMIN_PASSWORD=/d' .env
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+            echo "SUPABASE_SECRET_KEY=$SUPABASE_SECRET_KEY"
+            echo "E2E_ADMIN_EMAIL=$E2E_ADMIN_EMAIL"
+            echo "E2E_ADMIN_PASSWORD=$E2E_ADMIN_PASSWORD"
+          } >> .env
+      - name: Database migrations
+        run: pnpm db:migrate
+      - name: Seed database
+        run: pnpm db:seed
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
       - name: End-to-end tests

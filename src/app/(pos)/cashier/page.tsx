@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LogoutButton } from "@/components/shared/logout-button";
 
 export const metadata: Metadata = {
   title: "نقطة البيع",
@@ -26,6 +27,7 @@ export default function CashierPage() {
           <Button variant="outline" size="sm" disabled>
             فتح الصندوق
           </Button>
+          <LogoutButton />
         </div>
       </header>
 

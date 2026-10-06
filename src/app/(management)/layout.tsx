@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   Boxes,
   ClipboardList,
@@ -10,6 +11,8 @@ import {
 } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
+import { LogoutButton } from "@/components/shared/logout-button";
+import { getAuthContext } from "@/modules/auth";
 
 const navItems = [
   { href: "/orders", label: "الطلبات", icon: ReceiptText },
@@ -21,11 +24,17 @@ const navItems = [
   { href: "/settings", label: "الإعدادات", icon: Cog },
 ] as const;
 
-export default function ManagementLayout({
+export default async function ManagementLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const context = await getAuthContext();
+
+  if (context.status !== "active") {
+    redirect("/login");
+  }
+
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="flex items-center justify-between border-b px-4 py-3">
@@ -36,12 +45,15 @@ export default function ManagementLayout({
           <Separator orientation="vertical" className="h-5" />
           <span className="text-muted-foreground text-sm">الإدارة</span>
         </div>
-        <Link
-          href="/cashier"
-          className="text-primary text-sm underline-offset-4 hover:underline"
-        >
-          العودة لنقطة البيع
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/cashier"
+            className="text-primary text-sm underline-offset-4 hover:underline"
+          >
+            العودة لنقطة البيع
+          </Link>
+          <LogoutButton />
+        </div>
       </header>
 
       <div className="flex flex-1">

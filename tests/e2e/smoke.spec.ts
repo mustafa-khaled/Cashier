@@ -8,10 +8,12 @@ test("root redirects to the Arabic login screen", async ({ page }) => {
   await expect(page.getByText("تسجيل الدخول").first()).toBeVisible();
 });
 
-test("cashier shell renders the POS layout", async ({ page }) => {
+test("signed-out visit to the cashier shell redirects to login", async ({
+  page,
+}) => {
   await page.goto("/cashier");
-  await expect(page.getByRole("heading", { name: "نقطة البيع" })).toBeVisible();
-  await expect(page.getByText("الطلب الحالي")).toBeVisible();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByText("تسجيل الدخول").first()).toBeVisible();
 });
 
 test("health endpoint reports ok", async ({ request }) => {
