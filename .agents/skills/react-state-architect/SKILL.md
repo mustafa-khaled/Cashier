@@ -1,8 +1,8 @@
 ---
 name: react-state-architect
 description: >-
-  Design React state before generating Guesthouse UI. Use when creating
-  components, forms, filters, booking flows, or interactive admin/staff screens.
+  Design React state before generating Cashier UI. Use when creating
+  components, forms, filters, order and checkout flows, or interactive admin/staff screens.
 ---
 
 # React State Architect

@@ -1,17 +1,17 @@
 ---
 trigger: glob
-globs: 'apps/api/**/*.ts, packages/contracts/**/*.ts, apps/web/**/*.{ts,tsx}'
-description: Transport DTOs are Zod contracts; never expose Mongoose documents as API
+globs: "src/**/*.ts"
+description: Transport DTOs are module Zod contracts; never expose Drizzle rows
 ---
 
 # DTO boundaries
 
-External transport contracts are DTOs. `packages/contracts` (`@guesthouse/shared`) is transport shared by web and API. It does **not** contain Mongoose models, repositories, secrets, or persistence-only types.
+External transport contracts are the module's `contracts/` schemas (`src/modules/{domain}/contracts/`). One module's contracts are that module's API — not a global package.
 
-Do not use `Partial<Booking>`, `Pick<BookingDocument, ...>`, or `BookingDocument` as request/response types.
+Do not use Drizzle `typeof orders.$inferSelect` rows, table types, or `Partial<Order>` as request/response types.
 
-Map: request DTO → application input → persistence → response DTO.
+Map: request DTO (Zod) → domain input → persistence → response DTO.
 
-Prefer separate `Create*Request`, `Update*Request`, `*Response`, `*QueryParams` when shapes differ.
+Prefer separate `Create*Schema`, `*ResponseSchema`, `*QuerySchema` when shapes differ. Money crosses the wire as decimal strings; map to bigint minor units at the boundary.
 
-Validate untrusted input with Zod before application code. Mongoose validation is a persistence safeguard, not the API boundary.
+Validate untrusted input with Zod before application code. Drizzle types are a compile-time/persistence safeguard, not the API boundary.

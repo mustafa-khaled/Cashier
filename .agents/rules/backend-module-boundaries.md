@@ -1,33 +1,30 @@
 ---
 trigger: glob
-globs: 'apps/api/**/*.ts, apps/worker/**/*.ts'
-description: Module-first Express layout; HTTP and Mongo are adapters
+globs: "src/**/*.ts, src/**/*.tsx"
+description: Module-first layout under src/modules; Next/Drizzle are adapters
 ---
 
-# Backend module boundaries
+# Module boundaries
 
 MODULE FIRST, LAYER SECOND.
 
-Identify the business capability before creating files. Do not start with "another controller/service/model".
-
-HTTP is not the application. MongoDB is not the application. Express and Mongoose are adapters around business rules.
+Identify the business capability before creating files. Route Handlers, Drizzle, and Supabase Auth are adapters around business rules — not the application.
 
 ## Existing modules
 
-Match the current files: `{feature}.routes.ts`, `{feature}.controller.ts`, `{feature}.service.ts`, `{feature}.schema.ts` under `apps/api/src/modules/{feature}/`. Do not invent a parallel `application/` tree beside an existing service.
+Match `src/modules/{feature}/` (live example: `orders`). Public exports go through the module's `index.ts`. Do not invent a parallel tree beside an existing module.
 
-## New modules or new use cases
-
-Prefer:
+## Module shape
 
 ```
-modules/{capability}/
-  api/           # controller, routes, dto, mapper
-  application/   # use cases independent of Express
-  domain/        # types, errors, policies — no Express, no Mongoose
-  infrastructure/# repositories, adapters
+src/modules/{capability}/
+  index.ts       # public exports only
+  contracts/     # Zod request/response schemas — the module's API
+  domain/        # pure types, state rules, calculations — no Next, no Drizzle
+  client/        # queryKeys + queryOptions/mutationOptions for the UI
+  server/        # queries, commands, repositories — add when a module needs DB
 ```
 
-Controllers parse HTTP and call one use case. Domain must not import Express. Repositories hide Mongoose.
+Not every module needs every folder. `domain/` must not import Next or Drizzle. `client/` must not import `server/` or `src/env/server`.
 
-Live modules include `auth`, `booking`, `room`, `guest`, `payment`, `property`, `notification`, `staff` flows via existing folders. Do not split `availability/` until those rules actually leave `room`/`booking`.
+Route Handlers under `src/app/api/v1/**` stay thin: validate with the module's `contracts`, call one function, respond via `ok`/`created`/`ApiError`.

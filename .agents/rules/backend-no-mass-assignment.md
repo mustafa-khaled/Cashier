@@ -1,7 +1,7 @@
 ---
 trigger: glob
-globs: 'apps/api/**/*.ts'
-description: Never persist req.body or Object.assign untrusted objects into Mongo
+globs: "src/**/*.ts"
+description: Never persist untrusted input; Zod parse then explicit allowlist
 ---
 
 # No mass assignment
@@ -9,10 +9,10 @@ description: Never persist req.body or Object.assign untrusted objects into Mong
 Never:
 
 ```ts
-await User.updateOne({ _id }, req.body);
-Object.assign(user, req.body);
+await db.update(orders).set(reqBody); // raw request object
+Object.assign(order, await request.json()); // any client-controlled fields
 ```
 
-Parse with a Zod schema, then persist only explicit allowlisted fields.
+Parse with the module's Zod contract, then write only explicit allowlisted fields.
 
-This blocks clients from setting `role`, `isVerified`, balances, or other privileged fields.
+This blocks clients from setting privileged fields (prices, totals, `role`, `paymentStatus`, ownership). Totals, prices, and status transitions are computed server-side in `domain/`, never taken from the client.

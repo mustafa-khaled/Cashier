@@ -1,13 +1,13 @@
 ---
 trigger: glob
-globs: 'apps/api/**/*.ts'
-description: Keep Express controllers thin; no workflows in HTTP handlers
+globs: "src/app/api/**/*.ts"
+description: Keep Route Handlers thin; no workflows in HTTP handlers
 ---
 
-# Thin controllers
+# Thin route handlers
 
-Allowed: params/query/body extraction, DTO parse via `wrapController`, auth context, one application/service call, HTTP status, response helpers (`created`, `ok`, `okPaginated`).
+Allowed in `src/app/api/v1/**/route.ts`: parse params/body, Zod validate against module `contracts`, auth context, one module call, response via `withApi` → `ok`/`created`/`apiErrorResponse`.
 
-Forbidden in controllers: Mongoose queries, Stripe, Cloudinary, BullMQ orchestration, business calculations, multi-step workflows, authorization policy invention.
+Forbidden in route handlers: Drizzle queries, multi-step transactions, business calculations, provider SDK calls (Supabase, payments, email), authorization policy invention, per-handler try/catch.
 
-Use `wrapController` from `common/utils/controller-wrapper.ts`. No per-handler try/catch.
+Handlers are wrapped with `withApi` from `@/shared/api/responses`; thrown `ApiError`s map to the envelope automatically. Business logic lives in the module (`domain/` or `server/`).

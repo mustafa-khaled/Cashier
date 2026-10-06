@@ -1,6 +1,6 @@
 ---
 trigger: glob
-globs: 'apps/web/**/*.ts, apps/web/**/*.tsx'
+globs: "src/**/*.ts, src/**/*.tsx"
 description: No secrets on the client; UI is not authorization
 ---
 

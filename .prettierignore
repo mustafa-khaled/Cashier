@@ -1,0 +1,12 @@
+pnpm-lock.yaml
+AGENTS.md
+CLAUDE.md
+docs/
+.next/
+out/
+build/
+coverage/
+playwright-report/
+test-results/
+public/
+drizzle

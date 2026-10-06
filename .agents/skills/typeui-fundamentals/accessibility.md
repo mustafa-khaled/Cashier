@@ -402,7 +402,9 @@ A mechanism must be available to bypass blocks of content repeated on multiple p
 ### 14.2 Implementation
 
 ```html
-<a href="#main-content" class="sr-only focus:not-sr-only ..."> Skip to main content </a>
+<a href="#main-content" class="sr-only focus:not-sr-only ...">
+  Skip to main content
+</a>
 ```
 
 - The link is visually hidden but appears on keyboard focus.

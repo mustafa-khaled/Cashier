@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cashier POS
 
-## Getting Started
+Arabic-only (RTL) point-of-sale system. Single full-stack [Next.js](https://nextjs.org) 16 app — no monorepo. Product and architecture spec: [`docs/Cashier_POS_PRD_Architecture.md`](docs/Cashier_POS_PRD_Architecture.md).
 
-First, run the development server:
+## Quickstart
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.example .env
+docker compose up -d     # local Postgres (cashier/cashier on :5434)
+pnpm dev                 # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Commands
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Task       | Command                                                   |
+| ---------- | --------------------------------------------------------- |
+| Dev        | `pnpm dev`                                                |
+| Lint       | `pnpm lint`                                               |
+| Format     | `pnpm format` / `pnpm format:check`                       |
+| Types      | `pnpm typecheck`                                          |
+| Unit tests | `pnpm test`                                               |
+| E2E tests  | `pnpm test:e2e`                                           |
+| Build      | `pnpm build`                                              |
+| DB schema  | `pnpm db:generate` · `pnpm db:migrate` · `pnpm db:studio` |
+| Seed       | `pnpm db:seed`                                            |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Requires Node 22 (`.nvmrc`) and **pnpm** — do not use npm/yarn. Git hooks (husky + lint-staged + commitlint) enforce format, lint, and conventional commits on every commit.
 
-## Learn More
+## Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/app/         App Router — (auth) | (pos) | (management) groups, api/v1/**
+src/modules/     Business capabilities: contracts/ (Zod) domain/ client/ server/
+src/components/  shadcn/ui primitives + shared cross-page components
+src/shared/      api helpers (withApi, clientFetch), money, dates, errors
+src/server/      Drizzle client + schema, structured logging, Supabase auth
+src/env/         Zod-validated environment (server + client)
+tests/e2e/       Playwright specs
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Key conventions (details in `AGENTS.md`): Arabic RTL UI, money as bigint minor units → decimal strings on the wire, UTC storage with Africa/Cairo display, thin Route Handlers wrapped in `withApi`, Drizzle query builders only.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tooling
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+ESLint 9 (flat) · Prettier · commitlint (conventional) + husky · Vitest + Testing Library · Playwright · GitHub Actions CI (`.github/workflows/ci.yml`) · Netlify (`netlify.toml`) · Dependabot.

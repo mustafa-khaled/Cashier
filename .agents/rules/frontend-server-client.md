@@ -1,6 +1,6 @@
 ---
 trigger: glob
-globs: 'apps/web/**/*.ts, apps/web/**/*.tsx'
+globs: "src/**/*.ts, src/**/*.tsx"
 description: RSC default; smallest possible client subtree
 ---
 

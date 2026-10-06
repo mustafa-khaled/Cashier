@@ -1,6 +1,6 @@
 ---
 trigger: glob
-globs: 'apps/web/**/*.ts, apps/web/**/*.tsx'
+globs: "src/**/*.ts, src/**/*.tsx"
 description: Loading, empty, error, mutation, and not-found states
 ---
 
