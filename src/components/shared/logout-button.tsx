@@ -1,33 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { Button } from "@/components/ui/button";
-import { authKeys } from "@/modules/auth/client/query-keys";
-import { authMutations } from "@/modules/auth/client/queries";
+import { useLogout } from "@/modules/auth/client/hooks";
 
 export function LogoutButton() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-
-  const logout = useMutation({
-    ...authMutations.logout(),
-    onSuccess: () => {
-      queryClient.removeQueries({ queryKey: authKeys.context() });
-      router.push("/login");
-      router.refresh();
-    },
-  });
+  const { logout, isPending } = useLogout();
 
   return (
     <Button
       variant="outline"
       size="sm"
-      onClick={() => logout.mutate()}
-      disabled={logout.isPending}
+      onClick={() => logout()}
+      disabled={isPending}
     >
-      {logout.isPending ? "جارٍ الخروج…" : "تسجيل الخروج"}
+      {isPending ? "جارٍ الخروج…" : "تسجيل الخروج"}
     </Button>
   );
 }

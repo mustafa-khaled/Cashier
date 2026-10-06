@@ -1,5 +1,6 @@
 export { authKeys } from "./client/query-keys";
-export { authMutations, authQueries } from "./client/queries";
+export { authQueries } from "./client/queries";
+export { authMutations } from "./client/mutations";
 export {
   authContextSchema,
   loginRequestSchema,

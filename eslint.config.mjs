@@ -17,6 +17,24 @@ const eslintConfig = defineConfig([
     "coverage/**",
   ]),
   prettier,
+  {
+    files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
+    ignores: ["src/app/providers.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@tanstack/react-query",
+              message:
+                "Screens use module hooks from src/modules/{domain}/client/hooks.ts instead of importing react-query directly.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

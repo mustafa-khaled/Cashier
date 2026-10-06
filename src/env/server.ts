@@ -32,6 +32,8 @@ const serverSchema = z.object({
   SUPABASE_SECRET_KEY: optionalSecret,
   E2E_ADMIN_EMAIL: z.email().optional(),
   E2E_ADMIN_PASSWORD: optionalSecret,
+  E2E_CASHIER_EMAIL: z.email().optional(),
+  E2E_CASHIER_PASSWORD: optionalSecret,
   INTERNAL_JOB_SECRET: optionalSecret,
   ERROR_TRACKING_DSN: optionalSecret,
 });
@@ -50,6 +52,8 @@ export const serverEnv: ServerEnv = validate(
     SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
     E2E_ADMIN_EMAIL: process.env.E2E_ADMIN_EMAIL,
     E2E_ADMIN_PASSWORD: process.env.E2E_ADMIN_PASSWORD,
+    E2E_CASHIER_EMAIL: process.env.E2E_CASHIER_EMAIL,
+    E2E_CASHIER_PASSWORD: process.env.E2E_CASHIER_PASSWORD,
     INTERNAL_JOB_SECRET: process.env.INTERNAL_JOB_SECRET,
     ERROR_TRACKING_DSN: process.env.ERROR_TRACKING_DSN,
   },

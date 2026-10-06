@@ -21,7 +21,6 @@ import {
 const ORGANIZATION_NAME = "مؤسسة نموذجية";
 const LOCATION_CODE = "MAIN";
 const LOCATION_NAME = "الفرع الرئيسي";
-const EMPLOYEE_CODE = "EMP-0001";
 
 const PERMISSIONS = [
   { key: "orders.create", module: "orders", description: "إنشاء طلب بيع" },
@@ -180,10 +179,10 @@ function log(message: string, fields: Record<string, unknown> = {}): void {
 }
 
 async function main(): Promise<void> {
-  const email = env.E2E_ADMIN_EMAIL;
-  const password = env.E2E_ADMIN_PASSWORD;
+  const adminEmail = env.E2E_ADMIN_EMAIL;
+  const adminPassword = env.E2E_ADMIN_PASSWORD;
 
-  if (!email || !password) {
+  if (!adminEmail || !adminPassword) {
     throw new Error("E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD are required");
   }
   if (!env.SUPABASE_SECRET_KEY) {
@@ -192,13 +191,30 @@ async function main(): Promise<void> {
     );
   }
 
-  const authUser = await findOrCreateAuthUser(
+  const adminUser = await findOrCreateAuthUser(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.SUPABASE_SECRET_KEY,
-    email,
-    password,
+    adminEmail,
+    adminPassword,
   );
-  log("auth user ready", { authUserId: authUser.id, email });
+  log("auth user ready", { authUserId: adminUser.id, email: adminEmail });
+
+  const cashierEmail = env.E2E_CASHIER_EMAIL;
+  const cashierPassword = env.E2E_CASHIER_PASSWORD;
+  let cashierUser: SupabaseAdminUser | null = null;
+  if (cashierEmail && cashierPassword) {
+    cashierUser = await findOrCreateAuthUser(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.SUPABASE_SECRET_KEY,
+      cashierEmail,
+      cashierPassword,
+    );
+    log("auth user ready", { authUserId: cashierUser.id, email: cashierEmail });
+  } else {
+    log("cashier demo user skipped", {
+      reason: "E2E_CASHIER_EMAIL/E2E_CASHIER_PASSWORD not set",
+    });
+  }
 
   const client = postgres(env.DATABASE_URL, { prepare: false, max: 1 });
   const db = drizzle(client);
@@ -250,27 +266,6 @@ async function main(): Promise<void> {
         .then((rows) => rows[0]));
     if (!locationRow) {
       throw new Error("Failed to provision location");
-    }
-
-    const [profile] = await db
-      .insert(staffProfiles)
-      .values({
-        authUserId: authUser.id,
-        displayName: "مدير النظام",
-        email,
-        status: "ACTIVE",
-      })
-      .onConflictDoNothing()
-      .returning();
-    const profileRow =
-      profile ??
-      (await db
-        .select()
-        .from(staffProfiles)
-        .where(eq(staffProfiles.authUserId, authUser.id))
-        .then((rows) => rows[0]));
-    if (!profileRow) {
-      throw new Error("Failed to provision staff profile");
     }
 
     for (const permission of PERMISSIONS) {
@@ -332,53 +327,109 @@ async function main(): Promise<void> {
       }
     }
 
-    const [membership] = await db
-      .insert(organizationMemberships)
-      .values({
-        organizationId: org.id,
-        staffProfileId: profileRow.id,
-        employeeCode: EMPLOYEE_CODE,
-        status: "ACTIVE",
-      })
-      .onConflictDoNothing()
-      .returning();
-    const membershipRow =
-      membership ??
-      (await db
-        .select()
-        .from(organizationMemberships)
-        .where(
-          and(
-            eq(organizationMemberships.organizationId, org.id),
-            eq(organizationMemberships.staffProfileId, profileRow.id),
-          ),
-        )
-        .then((rows) => rows[0]));
-    if (!membershipRow) {
-      throw new Error("Failed to provision membership");
-    }
+    async function ensureStaffAccount(
+      organization: { id: string },
+      location: { id: string },
+      options: {
+        authUser: SupabaseAdminUser;
+        displayName: string;
+        email: string;
+        employeeCode: string;
+        roleKey: string;
+      },
+    ) {
+      const [profile] = await db
+        .insert(staffProfiles)
+        .values({
+          authUserId: options.authUser.id,
+          displayName: options.displayName,
+          email: options.email,
+          status: "ACTIVE",
+        })
+        .onConflictDoNothing()
+        .returning();
+      const profileRow =
+        profile ??
+        (await db
+          .select()
+          .from(staffProfiles)
+          .where(eq(staffProfiles.authUserId, options.authUser.id))
+          .then((rows) => rows[0]));
+      if (!profileRow) {
+        throw new Error("Failed to provision staff profile");
+      }
 
-    const ownerRole = roleRows.find((role) => role.key === "owner");
-    if (ownerRole) {
+      const [membership] = await db
+        .insert(organizationMemberships)
+        .values({
+          organizationId: organization.id,
+          staffProfileId: profileRow.id,
+          employeeCode: options.employeeCode,
+          status: "ACTIVE",
+        })
+        .onConflictDoNothing()
+        .returning();
+      const membershipRow =
+        membership ??
+        (await db
+          .select()
+          .from(organizationMemberships)
+          .where(
+            and(
+              eq(organizationMemberships.organizationId, organization.id),
+              eq(organizationMemberships.staffProfileId, profileRow.id),
+            ),
+          )
+          .then((rows) => rows[0]));
+      if (!membershipRow) {
+        throw new Error("Failed to provision membership");
+      }
+
+      const assignedRole = roleRows.find(
+        (role) => role.key === options.roleKey,
+      );
+      if (!assignedRole) {
+        throw new Error(`Role ${options.roleKey} not found`);
+      }
       await db
         .insert(membershipRoles)
         .values({
           membershipId: membershipRow.id,
-          roleId: ownerRole.id,
-          organizationId: org.id,
+          roleId: assignedRole.id,
+          organizationId: organization.id,
         })
         .onConflictDoNothing();
+
+      await db
+        .insert(staffLocationAssignments)
+        .values({
+          membershipId: membershipRow.id,
+          locationId: location.id,
+          organizationId: organization.id,
+          isDefault: true,
+        })
+        .onConflictDoNothing();
+
+      return membershipRow;
     }
 
-    await db
-      .insert(staffLocationAssignments)
-      .values({
-        membershipId: membershipRow.id,
-        locationId: locationRow.id,
-        organizationId: org.id,
-        isDefault: true,
-      })
-      .onConflictDoNothing();
+    await ensureStaffAccount(org, locationRow, {
+      authUser: adminUser,
+      displayName: "مدير النظام",
+      email: adminEmail,
+      employeeCode: "EMP-0001",
+      roleKey: "owner",
+    });
+
+    if (cashierUser && cashierEmail) {
+      await ensureStaffAccount(org, locationRow, {
+        authUser: cashierUser,
+        displayName: "كاشير تجريبي",
+        email: cashierEmail,
+        employeeCode: "EMP-0002",
+        roleKey: "cashier",
+      });
+    }
 
     const counts = await Promise.all([
       db.select().from(roles).where(eq(roles.organizationId, org.id)),
