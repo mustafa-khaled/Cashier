@@ -31,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="ar"
       dir="rtl"
-      className={`${fontSans.variable} ${fontMono.variable} h-full antialiased`}
+      className={`${fontSans.variable} ${fontMono.variable} dark h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <DirectionProvider dir="rtl">

@@ -4,3 +4,4 @@ export * from "./contracts/create-order.schema";
 export * from "./contracts/order-response.schema";
 export * from "./domain/order-state";
 export * from "./domain/totals";
+export { CashierScreen } from "./screens/cashier-screen";

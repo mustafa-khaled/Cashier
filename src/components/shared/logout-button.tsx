@@ -10,6 +10,7 @@ export function LogoutButton() {
     <Button
       variant="outline"
       size="sm"
+      className="min-h-12"
       onClick={() => logout()}
       disabled={isPending}
     >

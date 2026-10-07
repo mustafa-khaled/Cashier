@@ -2,6 +2,9 @@ import Decimal from "decimal.js";
 
 import type { PaymentStatus } from "./order-state";
 
+/** VAT rate applied to order lines until configurable tax rules ship (PRD tax_rates). */
+export const VAT_RATE = 0.14;
+
 export interface LineAmounts {
   subtotalMinor: number;
   discountMinor: number;
